@@ -1,0 +1,31 @@
+.App {
+    text-align: center;
+}
+
+.App-header {
+    background-color: #3C3835;
+    height: 100px;
+    padding: 10px;
+    /* position: fixed;
+    width: 100%; */
+    /* top: 0px; */
+}
+
+.App-title {
+    font-family: 'Special Elite', cursive;
+    font-size: 70px;
+    color: #EDDA63;
+}
+
+.App-intro {
+    font-size: large;
+}
+
+@keyframes App-logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
