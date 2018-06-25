@@ -1,22 +1,22 @@
 // External Dependencies
 import React, { Component } from 'react';
+import firebase from 'firebase';
 import PropTypes from 'prop-types';
-import Avatar from 'material-ui-next/Avatar';
 import Chip from 'material-ui-next/Chip';
-import DatePicker from 'material-ui/DatePicker';
 import { DialogContent } from 'material-ui-next/Dialog';
-import Input from 'material-ui-next/Input';
-import Subheader from 'material-ui/Subheader';
 import TextField from 'material-ui-next/TextField';
+import FlatButton from 'material-ui/FlatButton';
+import LinearProgress from 'material-ui/LinearProgress';
+import Snackbar from 'material-ui/Snackbar';
 import {
   red300,
-  red400,
   green300,
 } from 'material-ui/styles/colors';
 
 // Internal Dependencies
 import connectComponent from '../connect-component';
 import { updateBookForm } from '../state/update-books-dialog/actions';
+import { firestoreImageURL } from '../config/firebase_config';
 
 // Local Variables
 const propTypes = {
@@ -31,6 +31,7 @@ const propTypes = {
   updateForm: PropTypes.func,
 };
 
+// Styling variables
 const defaultProps = {
   books: [],
   authorName: '',
@@ -43,33 +44,14 @@ const defaultProps = {
   updateForm: null,
 };
 
-const menuStyles = {
-  PaperProps: {
-    style: {
-      maxHeight: 300,
-      width: 300,
-    },
-  },
-};
-
 const rowStyles = {
   display: 'flex',
   justifyContent: 'space-between',
   paddingTop: 24,
 };
 
-const rowStyles3 = {
-  display: 'flex',
-  flexDirection: 'column',
-};
-
 const textFieldStyles = {
   marginRight: 24,
-};
-
-const datePickerStyles = {
-  width: '100%',
-  paddingTop: 10,
 };
 
 const chipStyles = {
@@ -77,62 +59,31 @@ const chipStyles = {
 };
 
 const chipTopicStyles = {
-  backgroundColor: green300,
-  margin: 3,
-}
-
-const coveredChipTopicStyles = {
   backgroundColor: red300,
   margin: 3,
 }
 
-const topicsLabelColor = {
-  labelColor: green300,
+const coveredChipTopicStyles = {
+  backgroundColor: green300,
+  margin: 3,
 }
 
-const chipDivStyles = {
-  justifyContent: 'center',
-  flexWrap: 'wrap',
-  marginTop: 16,
-  display: 'flex',
-  paddingTop: 24,
-};
-
-const selectedStyles = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  marginRight: 2,
-};
-
-const subheaderStyles = {
-  paddingLeft: 0,
-};
-
-const listItemStyles = {
-  paddingTop: 10,
-};
-
-const avatarStyles = {
-  width: 45,
-  height: 45,
-  paddingLeft: 0,
-};
-
 const bookImageStyles = {
-  marginLeft: '23%',
+  marginLeft: '27%',
   padding: '10px',
   width: '160px',
   height: '225px',
+  borderStyle: 'solid',
+  borderWidth: '2px',
+  borderColor: green300,
 };
 
-const chipDivStyles1 = {
-  margin: '15px',
-  overflow: 'overlay',
-  maxHeight: '160px',
-  maxWidth: '500px',
-  // textAlign: 'center',
+const uploadStyles = {
+  alignItems: 'center',
+  justifyContent: 'center',
 }
 
+// Component definition
 class BookInfoForm extends Component {
 
   constructor(props) {
@@ -140,6 +91,9 @@ class BookInfoForm extends Component {
     this.state = {
       topicsToRead: '',
       topicsRead: '',
+      percentage: '',
+      topicsError: false,
+      topicsCoveredError: false,
     };
   }
 
@@ -157,18 +111,41 @@ class BookInfoForm extends Component {
       updateForm,
     } = this.props;
 
+    // adds/error on key press enter for adding topics
     const handleKeyStroke = (e) => {
       if(e.keyCode === 13) {
        if(e.target.id === "topicsToRead") {
-        topics.unshift(this.state.topicsToRead);
-        updateForm({topics});
+        const newData = this.state.topicsToRead;
+        if(!topics.includes(newData)) {
+          this.setState({
+            topicsError: false,
+          });
+          topics.unshift(this.state.topicsToRead);
+          updateForm({topics});
+        } else {
+          this.setState({
+            topicsError: true,
+          });
+        }
+  
         this.setState({
           topicsToRead: "",
         });
        }
        if (e.target.id === "topicsRead") {
-        topicsCovered.unshift(this.state.topicsRead);
-        updateForm(topicsCovered);
+        const newData = this.state.topicsRead;
+        if(!topicsCovered.includes(newData)) {
+          this.setState({
+            topicsCoveredError: false,
+          });
+          topicsCovered.unshift(this.state.topicsRead);
+          updateForm({topicsCovered});
+
+        } else {
+          this.setState({
+            topicsCoveredError: true,
+          });
+        }
        }
        this.setState({
         topicsRead: "",
@@ -176,6 +153,7 @@ class BookInfoForm extends Component {
       }
     };
 
+    // on textfeild change
     const handleChange = (e) => {
       if(e.target.id === "topicsToRead") {
         this.setState({
@@ -187,11 +165,58 @@ class BookInfoForm extends Component {
           topicsRead: e.target.value
         });
       }
+    };
+
+    // handles delete book functionality from the firebase.
+    const handleDelete = data => {
+      console.log(data);
+      const topicIndex = topics.indexOf(data);
+      topics.splice(topicIndex, 1);
+      updateForm({topics});
+    };
+
+    const handleTopicsCoveredDelete = data => {
+      console.log(data);
+      const topicIndex = topicsCovered.indexOf(data);
+      topicsCovered.splice(topicIndex, 1);
+      updateForm({topicsCovered});
     }
 
+    // saves image to firebase storage
+    const handleImageSave = (e) => {
+      // get the file
+      const file = e.target.files[0];
+
+      // create a storage ref
+      const storageRef = firebase.storage().ref('BooksImages/' + `${books.length}.png`);
+      
+      // upload file
+      let task = storageRef.put(file);
+
+      // update progress
+      task.on('state_changed',
+        function progress(snapshot) {
+          let per = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.setState({
+            percentage: per,
+          });
+        }.bind(this),
+        // any possible errors
+        function error(err) {
+          console.log(err);
+        },
+
+        function complete() {
+          console.log("Firebase image upload finished");
+        }.bind(this)
+      );
+    };
+
+    // render the topics to read chips
     const renderTopics = topics.map(topic => {
       return (
         <Chip
+          onDelete={() => handleDelete(topic)}
           key={topic}
           label={topic}
           style={chipTopicStyles}
@@ -202,6 +227,7 @@ class BookInfoForm extends Component {
     const renderCoveredTopics = topicsCovered.map(topic => {
       return (
         <Chip
+          onDelete={() => handleTopicsCoveredDelete(topic)}
           key={topic}
           label={topic}
           style={coveredChipTopicStyles}
@@ -209,17 +235,43 @@ class BookInfoForm extends Component {
       );
     });
 
-    const image = `${window.location.pathname}images/books/${imageName}`;
+    const renderImage = (
+      <img alt="Image" src={firestoreImageURL(imageName)} style={bookImageStyles} />
+    );
+
+    // UI for uploading a new image in add new book
+    const renderUpload = (
+      <div style={uploadStyles}>
+        <FlatButton
+          containerElement="label"
+          label="Choose an Image: "
+          labelPosition="before"
+          secondary
+        >
+          <input
+            onChange={e => handleImageSave(e)}
+            id="upload"
+            type="file"
+          />
+        </FlatButton>
+        <LinearProgress
+          mode="determinate"
+          value={this.state.percentage}
+        />
+      </div>
+    );
+
+    const imageElement = imageName ? renderImage : renderUpload;
 
     const renderForm = (
       <DialogContent>
         <div>
-          <img alt={image} src={image} style={bookImageStyles} />
+          {imageElement}
         </div>
         <div style={rowStyles}>
           <TextField
             required
-            id={authorName}
+            id="authorName"
             label="Author Name"
             placeholder="Kyle Simpson"
             fullWidth
@@ -229,9 +281,9 @@ class BookInfoForm extends Component {
           />
           <TextField
             required
-            id={bookName}
+            id="bookName"
             label="Book Name"
-            placeholder="You Dont't Know JS"
+            placeholder="You Don't Know JS!"
             fullWidth
             value={bookName}
             onChange={e => updateForm({ bookName: e.target.value })}
@@ -239,13 +291,14 @@ class BookInfoForm extends Component {
         </div>
         <div style={rowStyles}>
           <TextField
+            error={this.state.topicsError}
             required
             id="topicsToRead"
             label="Topics to read"
-            placeholder="Enter topics to read..."
+            placeholder="Enter topic to read and press enter"
             fullWidth
             style={textFieldStyles}
-            value={this.state.topics}
+            value={this.state.topicsToRead}
             onChange={e => handleChange(e)}
             onKeyUp={(e) => handleKeyStroke(e)}
           />
@@ -255,13 +308,14 @@ class BookInfoForm extends Component {
         </div>
         <div style={rowStyles}>
           <TextField
+            error={this.state.topicsCoveredError}
             required
             id="topicsRead"
             label="Topics Read"
-            placeholder="Enter finished topics..."
+            placeholder="Enter finished topic and press enter"
             fullWidth
             style={textFieldStyles}
-            value={this.state.topicsToCover}
+            value={this.state.topicsRead}
             onChange={e => handleChange(e)}
             onKeyUp={(e) => handleKeyStroke(e)}
           />
@@ -272,7 +326,7 @@ class BookInfoForm extends Component {
         <div style={rowStyles}>
           <TextField
             required
-            id={notes}
+            id="notes"
             label="Notes"
             placeholder="Write something imp about the book"
             fullWidth
@@ -284,7 +338,7 @@ class BookInfoForm extends Component {
         <div style={rowStyles}>
           <TextField
             required
-            id={link}
+            id="link"
             label="Link"
             placeholder="Provide link to the book"
             fullWidth

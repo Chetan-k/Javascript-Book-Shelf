@@ -1,7 +1,6 @@
+// External Dependencies
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
-// External Dependencies
 import Button from 'material-ui-next/Button';
 import Dialog, {
   DialogActions,
@@ -11,19 +10,12 @@ import Dialog, {
 // Internal Dependencies
 import connectComponent from '../connect-component';
 import {
-  addOrUpdateNinja,
   dialogForm,
   dialogClose,
+  deleteBook,
   addOrUpdateBook,
 } from '../state/update-books-dialog/actions';
 import BookInfoForm from './bookInfoForm';
-
-const dialogStyles = {
-  // minWidth: 700,
-  maxWidth: 500,
-  margin: 'auto',
-  textAlign: 'center',
-};
 
 const dialogTitleStyles = {
   paddingBotom: 0,
@@ -35,11 +27,13 @@ const mainDiv = {
   maxWidth: 500,
 };
 
+// Component Definition
 class DialogAddBook extends Component {
   static propTypes = {
     id: PropTypes.number,
     isOpen: PropTypes.bool,
     onAddOrUpdateBook: PropTypes.func,
+    onDeleteBook: PropTypes.func,
     updateDialogForm: PropTypes.func,
     closeDialog: PropTypes.func,
   }
@@ -48,6 +42,7 @@ class DialogAddBook extends Component {
     id: null,
     isOpen: false,
     onAddOrUpdateBook: null,
+    onDeleteBook: null,
     updateDialogForm: null,
     closeDialog: null,
   };
@@ -65,19 +60,22 @@ class DialogAddBook extends Component {
       id,
       isOpen,
       onAddOrUpdateBook,
+      onDeleteBook,
     } = this.props;
-    const dialogTitle = `${id > -1 ? 'Update' : 'Add'} Book`;
+    const dialogTitle = `${id ? 'Update' : 'Add'} Book`;
     return (
       <div style={mainDiv}>
         <Dialog
           open={isOpen}
           onClose={this.handleClose}
           aria-labelledby="form-dialog-title"
-          // style={dialogStyles}
         >
           <DialogTitle style={dialogTitleStyles} id="form-dialog-title">{dialogTitle}</DialogTitle>
           <BookInfoForm />
           <DialogActions>
+            <Button onClick={() => onDeleteBook()} color="secondary">
+              Delete Book
+            </Button>
             <Button onClick={this.handleClose} color="secondary">
               Cancel
             </Button>
@@ -104,6 +102,7 @@ export default connectComponent((state) => {
     isOpen,
   };
 }, {
+  onDeleteBook: deleteBook,
   onAddOrUpdateBook: addOrUpdateBook,
   updateDialogForm: dialogForm,
   closeDialog: dialogClose,

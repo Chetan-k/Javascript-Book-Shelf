@@ -11,14 +11,6 @@ import thunk from 'redux-thunk';
 import books from './reducers/books-reducer';
 import { isOpen, form } from './update-books-dialog/books-dialog-reducer';
 
-// const initialState = {};
-
-// const middleware = [thunk];
-
-// const store = createStore(rootReducer, intialState, applyMiddleware(...middleware));
-
-// export default store;
-
 const booksDialog = combineReducers({
   isOpen,
   form,
@@ -33,14 +25,12 @@ const reducers = {
 const reducer = combineReducers(reducers);
 
 // Include redux dev tools in the store enhancer if on development
-
 const initialStoreEnhancer = () => {
 	const storeEnhancer = process.env.NODE_ENV === 'development'
 		? compose(
 				applyMiddleware(
 					thunk,
 				),
-				// eslint-disable-next-line global-require
 				require('../redux-dev-tools').default.instrument(),
 			)
 		: applyMiddleware(
@@ -49,9 +39,6 @@ const initialStoreEnhancer = () => {
 
 	return storeEnhancer;
 };
-
-
-// const createStoreWithMiddleware = applyMiddleware(thunk)(createStore);
 
 const initializeStore = intialState =>
 	createStore(reducer, intialState, initialStoreEnhancer());

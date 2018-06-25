@@ -1,3 +1,4 @@
+// External Dependencies
 import React, { Component } from 'react'
 import PropTypes from 'prop-types';
 import Chip from 'material-ui/Chip';
@@ -6,13 +7,19 @@ import Paper from 'material-ui/Paper';
 import TextField from 'material-ui/TextField';
 import Button from 'material-ui-next/Button';
 import PlusboxIcon from 'mdi-material-ui/PlusBox';
+import {
+	grey200,
+	teal300,
+	red800,
+	grey700,
+  } from 'material-ui/styles/colors';
 
 // Internal Dependencies
 import { fetchBooks } from '../state/actions/books-actions';
-import styles from '../styles/styles';
 import connectComponent from '../connect-component';
 import { dialogForm, dialogOpen } from '../state/update-books-dialog/actions';
 import DialogAddBook from './bookDialog';
+import { firestoreImageURL } from '../config/firebase_config';
 
 // Local variables
 const propTypes = {
@@ -29,7 +36,106 @@ const defaultProps = {
 	openDialog: null,
 };
 
-const bookStyles = styles.badgeList;
+// Styling variables
+const bookStyles = {
+	mainSection: {
+		marginTop: '1%',
+		marginLeft: '20px',
+		display: 'table',
+		width: '85%',
+	},
+	container: {
+		width: '250px',
+		height: '400px',
+		left: '13%',
+		position: 'relative',
+		margin: '20px',
+		marginBottom: '45px',
+		display: 'flex',
+		float: 'left',
+		background: grey200,
+		borderRadius: '0',
+	},
+	bookImage: {
+		padding: '10px',
+		width: '180px',
+		height: '200px',
+	},
+	bookInfoSection: {
+		position: 'relative',
+		marginBottom: '0',
+		width: '250px',
+	},
+	bookTitleText: {
+		fontSize: '18pt',
+		fontWeight: '300',
+		lineHeight: '25pt',
+		color: 'white',
+		textAlign: 'center',
+		padding: '2px',
+		background: teal300,
+		textShadow: '1px 1px 1px grey',
+	},
+	bookSubtitleText: {
+		color: red800,
+		fontSize: '10pt',
+		float: 'left',
+		paddingRight: '2px',
+		fontWeight: '300',
+	},
+	bookCardText: {
+		color: grey700,
+		fontSize: '10pt',
+		padding: '0px 10px',
+		paddingBottom: '5px',
+		marginLeft: '3px',
+		wordWrap: 'normal',
+		fontWeight: '250',
+	},
+	infoDiv: {
+		background: 'white',
+		height: '150px',
+	},
+	infoInnerDiv: {
+		padding: '10px',
+		width: '90%',
+		height: '75px',
+		overflow: 'scroll',
+	},
+	categoryChip: {
+		textAlign: 'center',
+		float: 'left',
+		background: '#FF5252',
+		color: 'white',
+		padding: '1px',
+		margin: '1px',
+		display: 'inline',
+		fontWeight: '250',
+		fontSize: '5pt',
+	},
+	labelColor: '#FFEBEE',
+	}
+
+const bookList = {
+	searchSection: {
+		position: 'fixed',
+		width: '100%',
+		padding: '5px',
+	},
+	searchIconSize: '12px',
+	searchTextBox: {
+		float: 'right',
+		color: 'white',
+		paddingRight: '4px',
+	},
+	hintStyle: {
+		color: 'grey',
+		fontWeight: '100',
+	},
+	inputStyle: {
+		color: 'white',
+	},
+}
 
 const addStyles = {
   paddingLeft: 10,
@@ -47,6 +153,7 @@ const bookDivStyles = {
 	paddingLeft: '20px',
 }
 
+// Component Definition
 class Books extends Component {
 	constructor() {
     super();
@@ -65,6 +172,7 @@ class Books extends Component {
     });
 	}
 
+	// click event on book card click.
 	handleClick(e, book) {
 
 		e.stopPropagation();
@@ -85,10 +193,6 @@ class Books extends Component {
     ]);
 	}
 
-	addBookClicked() {
-		console.log("clicked add book button");
-	}
-
   render() {
 		const { books } = this.props;
 
@@ -102,7 +206,7 @@ class Books extends Component {
 		if(this.props.books != null) {
 			return (
 				<div>
-					<div style={styles.coderList.searchSection}>
+					<div style={bookList.searchSection}>
 						<div style={bookDivStyles}>
 							<Button
 								onClick = {(event) => this.handleClick(event, {})}
@@ -115,18 +219,17 @@ class Books extends Component {
 							</Button>
 						</div>
 						<TextField
-							hintStyle={styles.coderList.hintStyle}
+							hintStyle={bookList.hintStyle}
 							hintText={<div>&nbsp;🔎 &nbsp;&nbsp;&nbsp;Search by book name</div>}
-							inputStyle={styles.coderList.inputStyle}
+							inputStyle={bookList.inputStyle}
 							onChange={event => this.updateSearch(event)}
-							style={styles.coderList.searchTextBox}
+							style={bookList.searchTextBox}
 						/>
 					</div>
 					<br />
 					<div style={bookStyles.mainSection}>
 						{
 							Object.keys(filteredBooks).map((key, index) => {
-								const image = `${window.location.pathname}images/books/${filteredBooks[key].id}.png`;
 
 								return (
 									<Paper
@@ -137,13 +240,12 @@ class Books extends Component {
 										zDepth={5}
 									>
 										<div>
-											<a href={filteredBooks[key].link}><img alt={image} src={image} style={bookStyles.badgeImage} /></a>
-											<div style={bookStyles.badgeCardText}>
-												<div><span style={bookStyles.badgeSubtitleText}>Author :</span> {filteredBooks[key].authorName}</div>
-												{/* {books[key].notes} */}
+											<a href={filteredBooks[key].link}><img alt="Book Image" src={firestoreImageURL(filteredBooks[key].imageName)} style={bookStyles.bookImage} /></a>
+											<div style={bookStyles.bookCardText}>
+												<div><span style={bookStyles.bookSubtitleText}>Author :</span> {filteredBooks[key].authorName}</div>
 											</div>
-											<div key={index} style={bookStyles.badgeInfoSection}>
-												<div style={bookStyles.badgeTitleText}>{filteredBooks[key].bookName}</div>
+											<div key={index} style={bookStyles.bookInfoSection}>
+												<div style={bookStyles.bookTitleText}>{filteredBooks[key].bookName}</div>
 												<Divider />
 												<div style={bookStyles.infoDiv}>
 													<div style={bookStyles.infoInnerDiv}>
@@ -159,9 +261,8 @@ class Books extends Component {
 																))
 															}
 													</div>
-													<div style={bookStyles.badgeCardText}>
-														{/* <div><span style={bookStyles.badgeSubtitleText}>Description :</span> {books[key].notes}</div> */}
-														<div style={bookStyles.badgeSubtitleText}>Description :</div>
+													<div style={bookStyles.bookCardText}>
+														<div style={bookStyles.bookSubtitleText}>Description :</div>
 														{filteredBooks[key].notes}
 													</div>
 												</div>
@@ -181,6 +282,7 @@ class Books extends Component {
 }
 
 Books.propTypes = propTypes;
+Books.defaultProps = defaultProps;
 export default connectComponent(state => ({
   books: state.books,
 }), {

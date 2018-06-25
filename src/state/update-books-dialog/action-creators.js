@@ -1,3 +1,4 @@
+// Internal Dependencies
 import {
 	ADD_BOOK_DIALOG_CLOSE,
 	ADD_BOOK_DIALOG_FORM,
