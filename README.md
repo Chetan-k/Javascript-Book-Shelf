@@ -12,7 +12,7 @@ Download or clone the repo and then follow the instructions:
 ```sh
 $ cd js-book-shelf
 $ npm install
-$ node start
+$ npm start
 ```
 
 ### Tech Used
@@ -27,7 +27,7 @@ JBS is basically built on [create-react-app](https://github.com/facebook/create-
 * [PropTypes] - For component prop and object type checking.
 
 ### Usage after installing the application:
-* Click on any book card (don't click on book image which takes you to book URL to read) and a edit dialog opens where you can edit a book (or) Add a new book by clicking "ADD A BOOK" button with required information. (few images are included in the "test" folder to upload and go through the app).
+* Click on any book card (don't click on book image which takes you to book URL to read) and an edit dialog opens where you can edit a book (or) Add a new book by clicking "ADD A BOOK" button with required information. (few images are included in the "test" folder to upload and go through the app).
 
 ### Functionalites
 
